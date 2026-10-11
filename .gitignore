@@ -1,0 +1,11 @@
+node_modules
+dist
+.env
+.aws-sam
+coverage
+benchmarks/BENG.zip
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
+*-desktop.png
+*-mobile.png
