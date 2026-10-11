@@ -42,6 +42,7 @@ export function buildListing(plan: Plan, input: ListingInput) {
     assumptions: { makerCostPerUnitInr: input.makerCostPerUnit, shippingPerUnitInr: input.shippingPerUnit, channelFeePercent: input.channelFeePercent },
     economics: { revenueInr: revenue, variableCostInr: +variableCost.toFixed(2), projectedContributionInr: +(revenue-variableCost).toFixed(2) },
     reclaimedMaterialKg: +recoveredKg.toFixed(2),
+    materialAssumptions: { plywoodDensityKgM3: 650 },
     utilizationPercent: +(plan.utilization*100).toFixed(1),
     validation: { passed: plan.valid, errors: plan.errors, modelVersion: 'scrapform-layout-v1' },
     parts: plan.placements.map(p=>({id:p.id,label:p.label,stockId:p.stockId,widthMm:p.width,heightMm:p.height,thicknessMm:p.thickness,xMm:p.x,yMm:p.y,rotated:p.rotated})),
