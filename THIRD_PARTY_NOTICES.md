@@ -8,6 +8,7 @@ ScrapForm is MIT licensed. Its direct runtime dependencies are used under their 
 | Three.js | 3D rendering | MIT | https://github.com/mrdoob/three.js |
 | React Three Fiber and Drei | React/Three.js integration | MIT | https://github.com/pmndrs/react-three-fiber and https://github.com/pmndrs/drei |
 | Lucide | Interface icons | ISC | https://github.com/lucide-icons/lucide |
+| AWS Amplify JavaScript | Workspace persistence and solve-job event runtime | Apache-2.0 | https://github.com/aws-amplify/amplify-js |
 | AWS SDK for JavaScript v3 | Lambda/DynamoDB/SQS integration | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3 |
 | Vite and Vitest | Build and tests | MIT | https://github.com/vitejs/vite and https://github.com/vitest-dev/vitest |
 

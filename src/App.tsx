@@ -1,7 +1,8 @@
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment } from '@react-three/drei';
-import { BadgeIndianRupee, Box, CheckCircle2, ChevronDown, CircleAlert, Download, Layers3, Plus, Ruler, Store, Trash2, WandSparkles } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { BadgeIndianRupee, Box, CheckCircle2, ChevronDown, CircleAlert, CloudCog, Download, Layers3, Plus, Ruler, Store, Trash2, WandSparkles } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { workspaceRuntime, type SolveRun, type WorkspaceSnapshot } from './amplifyWorkspace';
 import { exportCsv, exportDxf, exportListing, exportSvg } from './export';
 import { buildParts, productNames } from './products';
 import { solve } from './solver';
@@ -23,14 +24,51 @@ export default function App() {
   const [width,setWidth]=useState(420); const [depth,setDepth]=useState(220); const [height,setHeight]=useState(180); const [kerf,setKerf]=useState(3);
   const [quantity,setQuantity]=useState(1); const [view,setView]=useState<'3d'|'layout'>('3d');
   const [price,setPrice]=useState(1299); const [makerCost,setMakerCost]=useState(620); const [shipping,setShipping]=useState(120); const [channelFee,setChannelFee]=useState(8); const [leadDays,setLeadDays]=useState(5);
+  const [hydrated,setHydrated]=useState(false); const [saveState,setSaveState]=useState<'loading'|'saving'|'saved'|'error'>('loading');
+  const [jobState,setJobState]=useState<'queued'|'running'|'succeeded'|'infeasible'>('queued'); const [latestRun,setLatestRun]=useState<SolveRun|null>(null);
+  const solveSequence=useRef(0);
   const parts=useMemo(()=>Array.from({length:quantity},(_,batch)=>buildParts(product,width,depth,height,18).map(part=>({...part,id:`${part.id}-${batch+1}`,label:quantity>1?`${part.label} · ${batch+1}`:part.label}))).flat(),[product,width,depth,height,quantity]);
   const plan=useMemo(()=>solve(parts,stocks,kerf),[parts,stocks,kerf]);
+  useEffect(()=>{
+    let mounted=true;
+    void Promise.all([workspaceRuntime.loadWorkspace(),workspaceRuntime.getRuns()]).then(([saved,runs])=>{
+      if(!mounted)return;
+      if(saved){setStocks(saved.stocks);setProduct(saved.product);setWidth(saved.width);setDepth(saved.depth);setHeight(saved.height);setKerf(saved.kerf);setQuantity(saved.quantity);setPrice(saved.price);setMakerCost(saved.makerCost);setShipping(saved.shipping);setChannelFee(saved.channelFee);setLeadDays(saved.leadDays);}
+      setLatestRun(runs[0]??null);setSaveState('saved');setHydrated(true);
+    }).catch(()=>{if(mounted){setSaveState('error');setHydrated(true);}});
+    return()=>{mounted=false;};
+  },[]);
+  useEffect(()=>workspaceRuntime.subscribe((event,data)=>{
+    if(event==='solveQueued')setJobState('queued');
+    if(event==='solveRunning')setJobState('running');
+    if(event==='solveCompleted'){const run=data as SolveRun;setJobState(run.status);setLatestRun(run);}
+  }),[]);
+  useEffect(()=>{
+    if(!hydrated)return;
+    setSaveState('saving');
+    const timer=window.setTimeout(()=>{
+      const snapshot:WorkspaceSnapshot={schemaVersion:1,savedAt:new Date().toISOString(),stocks,product,width,depth,height,kerf,quantity,price,makerCost,shipping,channelFee,leadDays};
+      void workspaceRuntime.saveWorkspace(snapshot).then(()=>setSaveState('saved')).catch(()=>setSaveState('error'));
+    },250);
+    return()=>window.clearTimeout(timer);
+  },[hydrated,stocks,product,width,depth,height,kerf,quantity,price,makerCost,shipping,channelFee,leadDays]);
+  useEffect(()=>{
+    if(!hydrated)return;
+    const sequence=++solveSequence.current;
+    const pending=workspaceRuntime.beginSolve({stocks,product,width,depth,height,kerf,quantity,parts});
+    const timer=window.setTimeout(()=>{
+      if(sequence!==solveSequence.current)return;
+      workspaceRuntime.markRunning(pending.id);
+      void workspaceRuntime.completeSolve({...pending,status:plan.valid?'succeeded':'infeasible',partCount:parts.length,placementCount:plan.placements.length,utilization:plan.utilization,elapsedMs:plan.elapsedMs,validationStatus:plan.valid?'PASSED':'FAILED'});
+    },120);
+    return()=>window.clearTimeout(timer);
+  },[hydrated,stocks,product,width,depth,height,kerf,quantity,parts,plan]);
   const removeStock=(id:string)=>setStocks(s=>s.filter(x=>x.id!==id));
   const addStock=()=>setStocks(s=>[...s,{id:`S-${String(s.length+1).padStart(2,'0')}`,label:'New measured offcut',width:600,height:400,thickness:18,grain:'none',defects:[]}]);
   const updateStock=(id:string,key:'width'|'height'|'thickness'|'grain',value:number|Stock['grain'])=>setStocks(s=>s.map(x=>x.id===id?{...x,[key]:typeof value==='number'?Math.max(key==='thickness'?1:100,value):value}:x));
   const revenue=price*quantity; const fees=revenue*channelFee/100; const contribution=revenue-(makerCost+shipping)*quantity-fees; const recoveredKg=plan.placements.reduce((sum,p)=>sum+p.width*p.height*p.thickness*0.00000065,0);
   return <main>
-    <header><div className="brand"><span>SF</span><div><strong>ScrapForm</strong><small>Material-to-design workbench</small></div></div><div className="source"><CheckCircle2 size={15}/> measured inventory <b>v1.0</b></div></header>
+    <header><div className="brand"><span>SF</span><div><strong>ScrapForm</strong><small>Material-to-design workbench</small></div></div><div className="source"><CloudCog size={15}/><span>AWS Amplify OSS · {saveState==='loading'?'restoring':saveState}</span><b>{jobState}</b></div></header>
     <section className="workspace">
       <aside className="panel inventory"><div className="panel-title"><div><small>01 / STOCK</small><h2>Measured offcuts</h2></div><button className="icon" onClick={addStock} title="Add measured stock"><Plus/></button></div>
         <div className="stock-list">{stocks.map((s,i)=><article className="stock" key={s.id}><div className="stock-head"><span className={`swatch s${i}`}/><div><strong>{s.label}</strong><small>{s.id} · measured plywood</small></div><button className="icon quiet" onClick={()=>removeStock(s.id)} title={`Remove ${s.label}`} aria-label={`Remove ${s.label}`}><Trash2/></button></div><div className="dimensions"><label>W <input aria-label={`${s.label} width`} type="number" value={s.width} onChange={e=>updateStock(s.id,'width',+e.target.value)}/> mm</label><span>×</span><label>H <input aria-label={`${s.label} height`} type="number" value={s.height} onChange={e=>updateStock(s.id,'height',+e.target.value)}/> mm</label></div><div className="material-row"><label>Thickness <input aria-label={`${s.label} thickness`} type="number" value={s.thickness} onChange={e=>updateStock(s.id,'thickness',+e.target.value)}/> mm</label><label>Grain <select aria-label={`${s.label} grain`} value={s.grain} onChange={e=>updateStock(s.id,'grain',e.target.value as Stock['grain'])}><option value="long">Long</option><option value="cross">Cross</option><option value="none">Unspecified</option></select></label></div>{s.defects.length>0&&<div className="defect"><CircleAlert size={13}/>{s.defects.length} excluded defect zone</div>}</article>)}</div>
@@ -43,6 +81,7 @@ export default function App() {
         <label className="field">Product<select value={product} onChange={e=>setProduct(e.target.value as ProductKey)}>{Object.entries(productNames).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select><ChevronDown/></label>
         <div className="measure-grid"><label>Width<input aria-label="Product width" type="number" min="100" value={width} onChange={e=>setWidth(Math.max(100,+e.target.value))}/><span>mm</span></label><label>Depth<input aria-label="Product depth" type="number" min="80" value={depth} onChange={e=>setDepth(Math.max(80,+e.target.value))}/><span>mm</span></label><label>Height<input aria-label="Product height" type="number" min="60" value={height} onChange={e=>setHeight(Math.max(60,+e.target.value))}/><span>mm</span></label><label>Kerf<input aria-label="Saw kerf" type="number" value={kerf} min="0" max="10" onChange={e=>setKerf(Math.min(10,Math.max(0,+e.target.value)))}/><span>mm</span></label><label>Batch<input aria-label="Batch quantity" type="number" min="1" max="6" value={quantity} onChange={e=>setQuantity(Math.min(6,Math.max(1,Math.floor(+e.target.value))))}/><span>units</span></label></div>
         <div className={`result ${plan.valid?'valid':'invalid'}`} role="status" aria-live="polite">{plan.valid?<CheckCircle2/>:<CircleAlert/>}<div><strong>{plan.valid?'Plan independently validated':'No feasible complete plan'}</strong><small>{plan.valid?'Boundary, defects, kerf, grain, thickness and part counts passed.':plan.errors[0]||`${plan.unplaced.length} part(s) could not be placed.`}</small></div></div>
+        <div className="run-ledger" aria-live="polite"><CloudCog/><div><small>AMPLIFY SOLVE LEDGER</small><b>{jobState==='running'?'Validating current inputs':jobState==='queued'?'Solve queued':jobState==='succeeded'?'Reproducible run saved':'Infeasibility saved honestly'}</b>{latestRun&&<span>#{latestRun.inputFingerprint} · {latestRun.placementCount}/{latestRun.partCount} parts · {latestRun.validationStatus}</span>}</div></div>
         <div className="parts"><small>PART SCHEDULE</small>{parts.map(p=><div key={p.id}><span className="part-dot" style={{background:p.color}}/><b>{p.label}</b><span>{p.width} × {p.height}</span></div>)}</div>
         <section className="exchange"><div className="exchange-title"><Store/><div><small>SCRAPFORM EXCHANGE</small><b>Maker-ready batch</b></div><span>{plan.valid?'READY':'BLOCKED'}</span></div><div className="commerce-grid"><label>Price / unit <span><BadgeIndianRupee/>₹</span><input aria-label="Target selling price per unit" type="number" min="0" value={price} onChange={e=>setPrice(Math.max(0,+e.target.value))}/></label><label>Maker cost / unit <span><BadgeIndianRupee/>₹</span><input aria-label="Estimated maker cost per unit" type="number" min="0" value={makerCost} onChange={e=>setMakerCost(Math.max(0,+e.target.value))}/></label><label>Shipping / unit <span>₹</span><input aria-label="Shipping cost per unit" type="number" min="0" value={shipping} onChange={e=>setShipping(Math.max(0,+e.target.value))}/></label><label>Channel fee <span>%</span><input aria-label="Channel fee percentage" type="number" min="0" max="50" value={channelFee} onChange={e=>setChannelFee(Math.min(50,Math.max(0,+e.target.value)))}/></label><label>Lead time <span>days</span><input aria-label="Lead time days" type="number" min="1" value={leadDays} onChange={e=>setLeadDays(Math.max(1,+e.target.value))}/></label></div><div className="margin"><span>Projected batch contribution</span><strong className={contribution<0?'negative':''}>₹{Math.round(contribution).toLocaleString('en-IN')}</strong><small>₹{revenue.toLocaleString('en-IN')} revenue · includes maker cost, shipping and {channelFee}% channel fee</small></div><div className="impact-row"><span><b>{recoveredKg.toFixed(1)} kg</b> reclaimed</span><span><b>{Math.round(plan.utilization*100)}%</b> utilized</span><span><b>{quantity}</b> sellable units</span></div><button className="listing" disabled={!plan.valid} onClick={()=>exportListing(plan,{product:productNames[product],quantity,pricePerUnit:price,makerCostPerUnit:makerCost,channelFeePercent:channelFee,shippingPerUnit:shipping,leadDays})}><Download/>Export verified maker offer</button><p>Commercial values are editable assumptions, never observed sales. Export includes layout validation and traceable stock assignments.</p></section>
         <div className="exports"><small>FABRICATION EXPORTS</small><div><button disabled={!plan.valid} onClick={()=>exportSvg(plan,stocks)}><Download/>SVG</button><button disabled={!plan.valid} onClick={()=>exportDxf(plan)}><Download/>DXF</button><button disabled={!plan.valid} onClick={()=>exportCsv(plan)}><Download/>CSV</button></div></div>

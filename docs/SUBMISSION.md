@@ -12,9 +12,11 @@ The Exchange adds a startup wedge for small makers. Price, cost, shipping, chann
 
 ## Where AWS fits
 
-The deployment stack targets Mumbai. CloudFront serves the application over HTTPS from a private S3 origin. Cognito isolates editable workspaces. API Gateway accepts bounded scenario jobs; DynamoDB stores user-owned state and versioned results; SQS buffers compute; and the Lambda worker performs the same placement and validation workflow before persisting results. CloudWatch captures operations, worker concurrency controls cost, and AWS Budgets monitors the planned US$20 allocation.
+AWS Amplify JavaScript is active in the public build's core workflow. Its durable browser storage restores the full measured workspace and retains the latest 20 reproducible solve records. Amplify Hub drives the visible queued, running, and completed lifecycle. Every ledger record carries an input fingerprint, planner version, part counts, utilization, runtime, and honest validation result. This is fully exercisable without credentials on the live URL.
 
-The AWS account is currently awaiting service activation, so the identical production frontend is available through GitHub Pages while the checked-in SAM stack remains ready for deployment.
+The optional deployment stack targets Mumbai. CloudFront serves the application over HTTPS from a private S3 origin. Cognito isolates editable workspaces. API Gateway accepts bounded scenario jobs; DynamoDB stores user-owned state and versioned results; SQS buffers compute; and the Lambda worker performs the same placement and validation workflow before persisting results. CloudWatch captures operations, worker concurrency controls cost, and AWS Budgets monitors the planned US$20 allocation.
+
+The AWS account is currently service-blocked, so this optional cloud stack is not claimed as deployed. The production frontend and active AWS Amplify open-source workflow are available through GitHub Pages while the checked-in SAM stack remains ready for deployment.
 
 ## Links
 
