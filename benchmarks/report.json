@@ -1,0 +1,97 @@
+{
+  "source": "2DPackLib BENG, University of Bologna",
+  "algorithm": "first-fit decreasing shelf baseline",
+  "generatedAt": "2026-10-11T03:49:47.219Z",
+  "rows": [
+    {
+      "instance": "BENG01.ins2D",
+      "items": 20,
+      "bins": 4,
+      "areaLowerBound": 3,
+      "gapToAreaLowerBound": 1,
+      "utilization": 74.1,
+      "runtimeMs": 0.289
+    },
+    {
+      "instance": "BENG02.ins2D",
+      "items": 40,
+      "bins": 7,
+      "areaLowerBound": 6,
+      "gapToAreaLowerBound": 1,
+      "utilization": 81.1,
+      "runtimeMs": 0.066
+    },
+    {
+      "instance": "BENG03.ins2D",
+      "items": 60,
+      "bins": 10,
+      "areaLowerBound": 9,
+      "gapToAreaLowerBound": 1,
+      "utilization": 83.6,
+      "runtimeMs": 0.233
+    },
+    {
+      "instance": "BENG04.ins2D",
+      "items": 80,
+      "bins": 12,
+      "areaLowerBound": 11,
+      "gapToAreaLowerBound": 1,
+      "utilization": 89.1,
+      "runtimeMs": 0.404
+    },
+    {
+      "instance": "BENG05.ins2D",
+      "items": 100,
+      "bins": 15,
+      "areaLowerBound": 14,
+      "gapToAreaLowerBound": 1,
+      "utilization": 88.8,
+      "runtimeMs": 0.285
+    },
+    {
+      "instance": "BENG06.ins2D",
+      "items": 40,
+      "bins": 2,
+      "areaLowerBound": 2,
+      "gapToAreaLowerBound": 0,
+      "utilization": 71,
+      "runtimeMs": 0.046
+    },
+    {
+      "instance": "BENG07.ins2D",
+      "items": 80,
+      "bins": 3,
+      "areaLowerBound": 3,
+      "gapToAreaLowerBound": 0,
+      "utilization": 89.1,
+      "runtimeMs": 0.103
+    },
+    {
+      "instance": "BENG08.ins2D",
+      "items": 120,
+      "bins": 5,
+      "areaLowerBound": 5,
+      "gapToAreaLowerBound": 0,
+      "utilization": 80.5,
+      "runtimeMs": 0.292
+    },
+    {
+      "instance": "BENG09.ins2D",
+      "items": 160,
+      "bins": 6,
+      "areaLowerBound": 6,
+      "gapToAreaLowerBound": 0,
+      "utilization": 83.5,
+      "runtimeMs": 0.659
+    },
+    {
+      "instance": "BENG10.ins2D",
+      "items": 200,
+      "bins": 7,
+      "areaLowerBound": 7,
+      "gapToAreaLowerBound": 0,
+      "utilization": 88.8,
+      "runtimeMs": 0.39
+    }
+  ]
+}
