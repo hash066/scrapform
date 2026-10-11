@@ -12,6 +12,8 @@ ScrapForm uses the Apache-2.0 [AWS Amplify JavaScript](https://github.com/aws-am
 
 This credential-free public build deliberately uses Amplify's local-first browser storage so judges can exercise the complete workflow on GitHub Pages. The storage boundary is injected and tested, and can be replaced by the authenticated API in `infra/` without changing solver or UI code. Clearing site data clears the local workspace; it is not represented as cross-device cloud sync. See `docs/AWS_OPEN_SOURCE.md` for the exact dependency and verification path.
 
+![ScrapForm architecture](docs/architecture.png)
+
 ## Local development
 
 ```sh
