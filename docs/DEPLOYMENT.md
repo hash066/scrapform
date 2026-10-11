@@ -13,3 +13,11 @@ aws cloudfront create-invalidation --distribution-id DISTRIBUTION_ID --paths '/*
 ```
 
 The stack creates private S3 hosting through CloudFront, Cognito, an authenticated HTTP API, SQS, DynamoDB, Lambda, CloudWatch integration, and a US$20 monthly budget alert. The budget is an alert, not an automatic hard stop. Worker concurrency is capped at two.
+
+The browser client also builds with relative asset URLs (`base: './'`), so `npm run build` can be published as a GitHub Pages disaster-recovery demo without changing the AWS architecture.
+
+## Job contract
+
+`POST /jobs` accepts 1-250 `parts`, 1-50 measured `stocks`, `kerfMm`, and an optional `offer`. Cognito ownership is included in the DynamoDB partition key. The API rejects malformed scenarios before queueing. The worker reloads the persisted scenario, marks it `RUNNING`, computes placement and independent constraint checks, then stores `COMPLETE` or an explicit `FAILED` result. Results expire after seven days.
+
+Every computed result includes `placements`, `unplaced`, `errors`, `utilization`, `usedArea`, `availableArea`, `units`, `modelVersion`, `runtimeMs`, and `validationStatus`. Offer economics remain labeled user-supplied assumptions.
